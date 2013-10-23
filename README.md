@@ -1,6 +1,6 @@
 Installation
 
-To install the Brafton Sitefinity Importer, unzip the plug-in folder and place all contents directly into the root folder for your site. Within the "Publishing" folder are two files called "XmlPipeImportDesignerView.js" and "XmlPipeImportDesignerView.ascx". In Visual Studio, view all files, include the added folder and files, and set the build action of these files to "EmbeddedResource" when building the application.
+To install the Brafton Sitefinity Importer, unzip the importer folder and place all contents directly into the root folder of your application. Open the application in Visual Studio, view all files, and include the importer files. Within the "Publishing" folder are two files called "XmlPipeImportDesignerView.js" and "XmlPipeImportDesignerView.ascx" -- set the build action of these two files to "EmbeddedResource" when building the application.
 
 Configuration
 
