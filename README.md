@@ -25,6 +25,9 @@ When the importer runs, the image gets downloaded from the feed and the image UR
 
 Once you have setup image handling, go back to the "Feeds and Notifications" page, go to Actions and click "Run." Give it a moment and the articles and images should import. You can see the published articles under "Content" --> "News". When you turn on the importer or upload from archives, images should now download into the Brafton image album and the image path should be stored in the database. 
 
+#### Automating the Importer ####
+
+To set articles to import automatically, simply go to "Feeds and Notifications" -> "Content to Include" -> Click Change next to "Brafton News Pipe" -> Set the "Schedule publication updates interval". We recommend either hourly or daily. 
 
 #### Uploading Archives ####
 
