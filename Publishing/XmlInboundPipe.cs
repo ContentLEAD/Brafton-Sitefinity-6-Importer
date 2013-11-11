@@ -376,11 +376,11 @@ namespace SitefinityWebApp.Publishing
         }
     
         //If option to "Automatically publish imported items" is checked in Alternative publishing, 
-        //it will publish at the moment importer runs instead of publish date provided in XML feed. 
-        //This will publish items with the provided publish date the moment items are imported. 
-        //The way it works: queries for all news items that are in "Master" status (0), publishes
-        //those item (creates a new version with "Live" status (2). The "Master" version will remain, 
-        //so there will always be two copies of a news item in database, Master and Live. Only live is visible. -Ly
+        //the article publish date will be set to the moment importer runs instead of the publish date provided in the XML feed. 
+        //The code below will publish items with the provided publish date the moment items are imported. 
+        //The way it works: method queries for all news items that are in "Master" status (0) and publishes
+        //those items by creating a new version with "Live" status (2). The "Master" version will remain, 
+        //so there will always be two copies of a news item in the database, Master and Live. Only live is visible. -Ly
 
         public virtual void publishNewsItems()
            {
