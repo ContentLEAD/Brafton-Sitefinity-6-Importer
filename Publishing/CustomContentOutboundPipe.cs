@@ -27,24 +27,31 @@ namespace SitefinityWebApp.Publishing
                     //var Category = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Taxonomy.Name == "Categories").FirstOrDefault();
                     //try
                     //{
-                    //    (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", Category.Id);
+                    //   (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", Category.Id);
                     //}
                     //catch (Exception e){ 
                     //}
                     var tagName = propertyValue.GetValue(wrapperObj).ToString();
-                    var tagList = taxonomyManager.GetTaxa<FlatTaxon>().Where(t => t.Name == tagName);
+                    var newtagname = tagName.Replace(" ", "").Replace("&", "");
+                    var tagList = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == newtagname);
                     if (tagList.Any())
                     {
-                        (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Tags", tagList.FirstOrDefault().Id);
+                      (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
                     }
                     else {
-                        var newTag = taxonomyManager.CreateTaxon<FlatTaxon>();
-                        newTag.Name = tagName;
-                        newTag.Title = tagName;
-                        newTag.Description = "";
-                        taxonomyManager.GetTaxonomies<FlatTaxonomy>().Where(t => t.Name == "Tags").First().Taxa.Add(newTag);
+                        var catTaxonomy = taxonomyManager.GetTaxonomies<HierarchicalTaxonomy>().Where(t => t.Name == "Categories").SingleOrDefault();
+                       var parentTaxonomy = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == "News").Single(); 
+                       var newCat = taxonomyManager.CreateTaxon<HierarchicalTaxon>();
+                        newCat.Name = newtagname;
+                        newCat.Title = tagName;
+                        newCat.Description = "";
+                        newCat.UrlName = newtagname;
+                        newCat.Taxonomy = catTaxonomy;
+                        parentTaxonomy.Subtaxa.Add(newCat);
+                        //taxonomyManager.GetTaxonomies<HierarchicalTaxonomy>().Where(t => t.Name == "news").First().Taxa.Add(newCat);
                         taxonomyManager.SaveChanges();
-                        (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Tags", newTag.Id);
+                        tagList = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == newtagname);
+                        (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
                     }
                     try
                     {
