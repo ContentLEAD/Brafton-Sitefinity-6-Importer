@@ -4,7 +4,11 @@ To install the Brafton Sitefinity Importer, unzip the importer folder and place 
 
 #### Configuration ####
 
-If the above steps are completed, you''ll be able to access the importer settings through the Sitefinity backend by going to "Administration" -> "Alternative Publishing" -> "Create a New Feed". In "Create a New Feed," go to "Content to Include," remove "Blog Posts" and select "Another Content Type." In this window, select "Brafton Feed." For url, provide the feed URL (without "/news"). Set the feed to check for updates every hour. Click Done. Now, go to "Publish As" --> "Add More" and select "Sitefinity Content". Select "News Items" from "Import Data As". Leave "Automatically publish imported data" UNCHECKED! Click Done. Then, click "Save Changes" in "Create Feed". The feed is now ready to be run. However, before running it, you will need to configure image handling for images to get imported and displayed. 
+If the above steps are completed, you''ll be able to access the importer settings through the Sitefinity backend by going to "Administration" -> "Alternative Publishing" -> "Create a New Feed". In "Create a New Feed," go to "Content to Include," remove "Blog Posts" and select "Another Content Type." In this window, select "Brafton Feed." For url, provide the feed URL (without "/news"). Set the feed to check for updates every hour. Click Done. Now, go to "Publish As" --> "Add More" and select "Sitefinity Content". Select "News Items" from "Import Data As". Leave "Automatically publish imported data" UNCHECKED! Click Done. Then, click "Save Changes" in "Create Feed". The feed is now ready to be run. However, before running it, you will need to configure categories and image handling. 
+
+#### Categories ####
+
+Before importing, create a parent category folder in Sitefinity called "News." Note: if this parent folder is not in place, the importer will fail. 
 
 #### Image Handling ####
 
