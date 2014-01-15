@@ -8,7 +8,9 @@ If the above steps are completed, you''ll be able to access the importer setting
 
 #### Categories ####
 
-Before importing, create a parent category folder in Sitefinity called "News." Note: if this parent folder is not in place, the importer will fail. 
+Before importing, create a parent category folder in Sitefinity called "News". 
+
+Note: if this parent folder is not in place, the importer will fail. 
 
 #### Image Handling ####
 
