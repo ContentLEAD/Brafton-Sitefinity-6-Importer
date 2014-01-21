@@ -8,6 +8,7 @@ using Telerik.Sitefinity.Personalization.Impl;
 using Telerik.Sitefinity.Publishing;
 using SitefinityWebApp.Publishing;
 using Telerik.Sitefinity.Publishing.Model;
+using Telerik.Sitefinity.Configuration;
 
 namespace SitefinityWebApp
 {
@@ -46,6 +47,9 @@ namespace SitefinityWebApp
 
             //Register Outbound Pipe
             PublishingSystemFactory.RegisterPipe(CustomContentOutboundPipe.PipeName, typeof(CustomContentOutboundPipe));
+
+            //Register Video Config
+            Config.RegisterSection<BraftonVideoConfig>();
         }
         
     }

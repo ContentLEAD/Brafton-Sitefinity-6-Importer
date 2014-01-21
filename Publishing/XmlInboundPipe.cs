@@ -8,6 +8,11 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
+using System.Web;
+using AdferoVideoDotNet.AdferoArticles;
+using AdferoVideoDotNet.AdferoArticlesVideoExtensions;
+using AdferoVideoDotNet.AdferoPhotos;
+
 using Telerik.Sitefinity.Configuration;
 using Telerik.Sitefinity.Localization;
 using Telerik.Sitefinity.Publishing;
@@ -97,33 +102,97 @@ namespace SitefinityWebApp.Publishing
         private IDefinitionField[] definition = null;
 
 
-        protected virtual IList<XmlDocument> DeserializeXml(string url)
+        protected virtual IList<XmlDocument> DeserializeXml(string braftonPublic, string braftonPrivate)
         {
 
             var result = new List<XmlDocument>();
             //string tr = ;
-                var doc = XDocument.Load(url);
-                var xRoot = doc.Root;
-                var documents = xRoot.Elements("newsListItem");
-                foreach (var item in documents)
+            BraftonVideoConfig config = Config.Get<BraftonVideoConfig>();
+            string publicKey = config.BraftonVideoPublic;
+            string secretKey = config.BraftonVideoPrivate;
+            int feedNumber = config.BraftonVideoFeedNumber;
+
+            //if (!ValidateVideoPublicKey(publicKey))
+            //{
+            //    //Log("Invalid video public key. Stopping.", LogLevel.Error);
+            //    return;
+            //}
+
+            //if (!ValidateGuid(secretKey))
+            //{
+            //    //Log("Invalid video secret key. Stopping.", LogLevel.Error);
+            //    return;
+            //}
+
+            //Log("Starting video import.", LogLevel.Debug);
+
+            string baseUrl = "http://api.video.brafton.com/v2/";
+            string basePhotoUrl = "http://pictures.directnews.co.uk/v2/";
+            AdferoVideoClient videoClient = new AdferoVideoClient(baseUrl, publicKey, secretKey);
+            AdferoClient client = new AdferoClient(baseUrl, publicKey, secretKey);
+            AdferoPhotoClient photoClient = new AdferoPhotoClient(basePhotoUrl);
+
+            AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos = client.ArticlePhotos();
+            string scaleAxis = AdferoVideoDotNet.AdferoPhotos.Photos.AdferoScaleAxis.X;
+
+            AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedsClient feeds = client.Feeds();
+            AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedList feedList = feeds.ListFeeds(0, 10);
+
+            AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticlesClient articles = client.Articles();
+            AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleList articleList = articles.ListForFeed(feedList.Items[feedNumber].Id, "live", 0, 100);
+
+            int articleCount = articleList.Items.Count;
+            //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoriesClient categories = client.Categories();
+
+
+            foreach (AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleListItem item in articleList.Items)
+            {
+                int brafId = item.Id;
+                AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article = articles.Get(brafId);
+                var guid = convertIdToGuid(brafId.ToString());
+
+                var title = article.Fields["title"].Trim();
+
+                string embedCode = videoClient.VideoPlayers().GetWithFallback(article.Id, AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RedBean, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0), AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RcFlashPlayer, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0)).EmbedCode;
+
+                string content = string.Format("<div class=\"videoContainer\">{0}</div> {1}", embedCode, article.Fields["content"]);
+
+                PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
+
+                var imageurl = "http://fc02.deviantart.net/fs20/f/2007/271/6/e/TF2_Sniper_Thanks_by_The_Loiterer.jpg";
+                var album = "Brafton";
+
+                if (fullSizePhoto != null)
                 {
-                    var guid = convertIdToGuid(item.Element("id").Value);
-                    var title = item.Element("headline").Value;
-                    var content = readContent(item.Attribute("href").Value);
-                    var imageid = readImageID(item.Attribute("href").Value + "/photos");
-                    var remoteimageurl = readImages(item.Attribute("href").Value + "/photos");
-                    var imagename = MakeValidFileName(item.Element("headline").Value);
-                    //var directory = @"C:\Program Files (x86)\Telerik\Sitefinity 6.1\Projects\finalpublish\"; 
-                    //var fullimagename = imagename + ".jpg";
-                    //var localpath = Path.Combine(directory, fullimagename);
-                    //var imageurl = "../../../images/default-source/brafton/" + imagename + ".jpg";
-                    var album = "Brafton";
+                    var imageid = fullSizePhoto.Value.Id.ToString();
+                    var remoteimageurl = fullSizePhoto.Value.Url;
+                    var imagename = fullSizePhoto.Value.DestinationFileName;
                     var imageguid = convertIdToGuid(imageid);
-                    var imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
-                    var pubdate = item.Element("publishDate").Value;
-                    var categories = readCategories(item.Attribute("href").Value + "/categories");
-                    result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, categories));
+                    imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
                 }
+
+                //article.Fields["lastModifiedDate"];
+
+                var pubdate = article.Fields["date"];
+
+                //category code
+                
+                //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoryList categoryList = categories.ListForArticle(article.Id, 0, 100);
+
+                //StringBuilder itemCategories = new StringBuilder();
+
+                //for (int i = 0; i < categoryList.TotalCount; i++)
+                //{
+                //    AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategory category = categories.Get(categoryList.Items[i].Id);
+                //    itemCategories.Append(GetCleanCategoryName(category.Name));
+                //    //p.Categories.Add(new Category(GetCleanCategoryName(category.Name), ""));
+                //}
+
+
+                //save post
+
+                result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, "Brafton Category"));
+            }
             return result;
         }
 
@@ -138,6 +207,14 @@ namespace SitefinityWebApp.Publishing
             }
 
             return itemCategories.ToString();
+        }
+
+        protected string GetCleanCategoryName(string catName)
+        {
+            // blogengine treats categories with dashes as child categories.
+            // HACK: this is an en dash.
+            // not quite the same, but avoids ophaning this category.
+            return catName.Replace("-", "–").Trim();
         }
 
         private Guid convertIdToGuid(string id) {
@@ -252,11 +329,15 @@ namespace SitefinityWebApp.Publishing
             string ext = Path.GetExtension(feedinput).Replace(".", "");
             var url = feedinput + "/news";
 
+            string braftonPublic = "";
+
+            string braftonPrivate = "";
+
             if (ext == "xml")
             { url = feedinput; }
             var wrapperObjects = new List<WrapperObject>();
 
-            IEnumerable<XmlDocument> result = this.DeserializeXml(url);
+            IEnumerable<XmlDocument> result = this.DeserializeXml(braftonPublic, braftonPrivate);
             foreach (var item in result)
             {
                 var wrapperObject = this.ConvertToWraperObject(item);
@@ -322,6 +403,7 @@ namespace SitefinityWebApp.Publishing
         {
             this.PipeSettings = pipeSettings;
             this.publishingPoint = PublishingSystemFactory.GetPublishingPoint(this.PipeSettings.PublishingPoint);
+
         }
 
         public virtual bool CanProcessItem(object item)
@@ -422,5 +504,75 @@ namespace SitefinityWebApp.Publishing
                }
 
          }
+
+        //video code starts here
+        //added by ben
+
+            private bool ValidateVideoPublicKey(string publicKey)
+            {
+                Regex reg = new Regex("[a-f0-9]{8}", RegexOptions.IgnoreCase);
+                return reg.IsMatch(publicKey);
+            }
+
+            private bool ValidateGuid(string guid)
+            {
+                Regex reg = new Regex("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", RegexOptions.IgnoreCase);
+                return reg.IsMatch(guid);
+            }
+
+            private PhotoInstance? GetPhotoInstance(AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article, AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos, AdferoVideoDotNet.AdferoPhotos.AdferoPhotoClient photoClient, string scaleAxis, int scale)
+            {
+                PhotoInstance? inst = null;
+
+                AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotoList photoList = photos.ListForArticle(article.Id, 0, 100);
+                if (photoList.TotalCount > 0)
+                {
+                    AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhoto apho = photos.Get(photoList.Items[0].Id);
+                    int photoId = apho.SourcePhotoId;
+                    AdferoVideoDotNet.AdferoPhotos.Photos.AdferoPhoto pho = photoClient.Photos().GetScaleLocationUrl(photoId, scaleAxis, scale);
+                    string photoUrl = pho.LocationUri;
+                    string photoCaption = photos.Get(photoList.Items[0].Id).Fields["caption"];
+
+                    enumeratedTypes.enumPhotoOrientation ori = enumeratedTypes.enumPhotoOrientation.Landscape;
+                    if (scaleAxis == AdferoVideoDotNet.AdferoPhotos.Photos.AdferoScaleAxis.Y)
+                        ori = enumeratedTypes.enumPhotoOrientation.Portrait;
+
+                    string cleanedUrl = photoUrl;
+                    if (cleanedUrl.IndexOf('?') >= 0)
+                        cleanedUrl = cleanedUrl.Substring(0, cleanedUrl.IndexOf('?'));
+
+                    inst = new PhotoInstance()
+                    {
+                        AltText = photoCaption,
+                        Caption = photoCaption,
+                        DestinationFileName = Slugify(article.Fields["title"]) + "-" + scale + Path.GetExtension(cleanedUrl),
+                        Height = 0,
+                        Id = apho.Id,
+                        Orientation = ori,
+                        Type = enumeratedTypes.enumPhotoInstanceType.Custom,
+                        Url = photoUrl,
+                        Width = 0
+                    };
+                }
+
+                return inst;
+            }
+
+        private string Slugify(string input)
+        {
+            Regex alphaNumeric = new Regex("[^a-zA-Z0-9]+");
+            return alphaNumeric.Replace(input.ToLower().Trim(), "-");
+        }
+
+            struct PhotoInstance
+            {
+                public int Width, Height, Id;
+                public string Url, Caption, AltText;
+                public enumeratedTypes.enumPhotoInstanceType Type;
+                public enumeratedTypes.enumPhotoOrientation Orientation;
+                public string DestinationFileName;
+            }
+
+
     }
 }

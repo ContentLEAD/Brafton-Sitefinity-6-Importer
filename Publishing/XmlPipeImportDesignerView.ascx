@@ -11,7 +11,7 @@
     <sfFields:TextField ID="urlName" runat="server" Title="<%$Resources:PublishingMessages, RssFeedUrlName %>"
         DisplayMode="Write" Expanded="true" DataFieldName="UrlName" WrapperTag="div"
         ExpandText="Change" CssClass="sfFormCtrl">
-        <validatordefinition required="true" messagecssclass="sfError" requiredviolationmessage="<%$Resources:PublishingMessages, ValidationMessageUrlCannotBeEmpty %>" />
+        <validatordefinition required="false" messagecssclass="sfError" requiredviolationmessage="<%$Resources:PublishingMessages, ValidationMessageUrlCannotBeEmpty %>" />
     </sfFields:TextField>
     
     <h2>

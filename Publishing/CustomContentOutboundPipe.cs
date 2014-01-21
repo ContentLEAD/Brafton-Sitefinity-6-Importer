@@ -23,7 +23,7 @@ namespace SitefinityWebApp.Publishing
             TaxonomyManager taxonomyManager = TaxonomyManager.GetManager();
             foreach (PropertyDescriptor propertyValue in properties)
             {
-                if (propertyValue.Name.Equals("Categories")) {
+                if (propertyValue.Name.Equals("Categories")){
                     //var Category = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Taxonomy.Name == "Categories").FirstOrDefault();
                     //try
                     //{
@@ -36,12 +36,13 @@ namespace SitefinityWebApp.Publishing
                     var tagList = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == newtagname);
                     if (tagList.Any())
                     {
-                      (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
+                        (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
                     }
-                    else {
+                    else
+                    {
                         var catTaxonomy = taxonomyManager.GetTaxonomies<HierarchicalTaxonomy>().Where(t => t.Name == "Categories").SingleOrDefault();
-                       var parentTaxonomy = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == "News").Single(); 
-                       var newCat = taxonomyManager.CreateTaxon<HierarchicalTaxon>();
+                        var parentTaxonomy = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == "News").Single();
+                        var newCat = taxonomyManager.CreateTaxon<HierarchicalTaxon>();
                         newCat.Name = newtagname;
                         newCat.Title = tagName;
                         newCat.Description = "";
@@ -55,7 +56,7 @@ namespace SitefinityWebApp.Publishing
                     }
                     try
                     {
-                        
+
                     }
                     catch (Exception e)
                     {

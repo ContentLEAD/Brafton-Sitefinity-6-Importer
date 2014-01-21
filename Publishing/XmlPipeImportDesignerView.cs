@@ -45,6 +45,7 @@ namespace SitefinityWebApp.Publishing
         {
             this.providerName = PublishingManager.GetProviderNameFromQueryString();
             this.UrlName.Description = String.Format(Res.Get<PublishingMessages>().FeedsBaseUrlPattern, PublishingManager.GetFeedsBaseURl());
+
             this.FillDaysDropDown();
         }
 
@@ -159,8 +160,10 @@ namespace SitefinityWebApp.Publishing
 
             var settings = new Dictionary<string, object>();
             var defaults = PublishingSystemFactory.GetPipe(XmlInboundPipe.PipeName).GetDefaultSettings();
+            //defaults. = "";
             settings.Add("settings", defaults);
             settings.Add("pipe", new WcfPipeSettings(XmlInboundPipe.PipeName, this.providerName));
+            
 
             desc.AddProperty("_settingsData", settings);
 
