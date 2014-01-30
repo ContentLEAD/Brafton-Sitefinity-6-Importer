@@ -27,6 +27,64 @@ namespace SitefinityWebApp.Publishing
     [ObjectInfo(Title = "BraftonVideoConfig1 Title", Description = "BraftonVideoConfig1 Description")]
     public class BraftonVideoConfig : ConfigSection
     {
+
+        [ObjectInfo(Title = "Written Content", Description = "Import Brafton Written Content?")]
+        [ConfigurationProperty("BraftonWritten", DefaultValue = true)]
+        public bool BraftonWritten
+        {
+            get
+            {
+                return (bool)this["BraftonWritten"];
+            }
+            set
+            {
+                this["BraftonWritten"] = value;
+            }
+        }
+
+        [ObjectInfo(Title = "Content API URL Base", Description = "Brafton Written Content API URL")]
+        [ConfigurationProperty("ContentURL", DefaultValue = "http://api.brafton.com/")]
+        public string ContentURL
+        {
+            get
+            {
+                return (string)this["ContentURL"];
+            }
+            set
+            {
+                this["ContentURL"] = value;
+            }
+        }
+
+        [ObjectInfo(Title = "Content API Key", Description = "Brafton Written Content API Key<br/>Example:dada3480-9d3b-4989-876a-663fdbe48be8")]
+        [ConfigurationProperty("ContentKey", DefaultValue = "xxxx")]
+        public string ContentKey
+        {
+            get
+            {
+                return (string)this["ContentKey"];
+            }
+            set
+            {
+                this["ContentKey"] = value;
+            }
+        }
+
+        [ObjectInfo(Title = "Video Content", Description = "Import Brafton Video Content?")]
+        [ConfigurationProperty("BraftonVideo", DefaultValue = true)]
+        public bool BraftonVideo
+        {
+            get
+            {
+                return (bool)this["BraftonVideo"];
+            }
+            set
+            {
+                this["BraftonVideo"] = value;
+            }
+        }
+
+
         [ObjectInfo(Title = "Public Key", Description = "Brafton Video Public Key")]
         [ConfigurationProperty("PublicKey", DefaultValue = "Public")]
         public string BraftonVideoPublic

@@ -108,9 +108,16 @@ namespace SitefinityWebApp.Publishing
             var result = new List<XmlDocument>();
             //string tr = ;
             BraftonVideoConfig config = Config.Get<BraftonVideoConfig>();
+
+            bool braftonVideo = config.BraftonVideo;
+            bool braftonWritten = config.BraftonWritten;
+
+            string contentURL = config.ContentURL;
+            string contentKey = config.ContentKey;
             string publicKey = config.BraftonVideoPublic;
             string secretKey = config.BraftonVideoPrivate;
             int feedNumber = config.BraftonVideoFeedNumber;
+
 
             //if (!ValidateVideoPublicKey(publicKey))
             //{
@@ -126,75 +133,175 @@ namespace SitefinityWebApp.Publishing
 
             //Log("Starting video import.", LogLevel.Debug);
 
-            string baseUrl = "http://api.video.brafton.com/v2/";
-            string basePhotoUrl = "http://pictures.directnews.co.uk/v2/";
-            AdferoVideoClient videoClient = new AdferoVideoClient(baseUrl, publicKey, secretKey);
-            AdferoClient client = new AdferoClient(baseUrl, publicKey, secretKey);
-            AdferoPhotoClient photoClient = new AdferoPhotoClient(basePhotoUrl);
-
-            AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos = client.ArticlePhotos();
-            string scaleAxis = AdferoVideoDotNet.AdferoPhotos.Photos.AdferoScaleAxis.X;
-
-            AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedsClient feeds = client.Feeds();
-            AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedList feedList = feeds.ListFeeds(0, 10);
-
-            AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticlesClient articles = client.Articles();
-            AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleList articleList = articles.ListForFeed(feedList.Items[feedNumber].Id, "live", 0, 100);
-
-            int articleCount = articleList.Items.Count;
-            //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoriesClient categories = client.Categories();
-
-
-            foreach (AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleListItem item in articleList.Items)
+            if (braftonVideo)
             {
-                int brafId = item.Id;
-                AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article = articles.Get(brafId);
-                var guid = convertIdToGuid(brafId.ToString());
+                string baseUrl = "http://api.video.brafton.com/v2/";
+                string basePhotoUrl = "http://pictures.video.brafton.com/v2/";
+                AdferoVideoClient videoClient = new AdferoVideoClient(baseUrl, publicKey, secretKey);
+                AdferoClient client = new AdferoClient(baseUrl, publicKey, secretKey);
+                AdferoPhotoClient photoClient = new AdferoPhotoClient(basePhotoUrl);
 
-                var title = article.Fields["title"].Trim();
+                AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos = client.ArticlePhotos();
+                string scaleAxis = AdferoVideoDotNet.AdferoPhotos.Photos.AdferoScaleAxis.X;
 
-                string embedCode = videoClient.VideoPlayers().GetWithFallback(article.Id, AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RedBean, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0), AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RcFlashPlayer, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0)).EmbedCode;
+                AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedsClient feeds = client.Feeds();
+                AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedList feedList = feeds.ListFeeds(0, 10);
 
-                string content = string.Format("<div class=\"videoContainer\">{0}</div> {1}", embedCode, article.Fields["content"]);
+                AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticlesClient articles = client.Articles();
+                AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleList articleList = articles.ListForFeed(feedList.Items[feedNumber].Id, "live", 0, 100);
 
-                PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
+                int articleCount = articleList.Items.Count;
+                //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoriesClient categories = client.Categories();
 
-                var imageurl = "http://fc02.deviantart.net/fs20/f/2007/271/6/e/TF2_Sniper_Thanks_by_The_Loiterer.jpg";
-                var album = "Brafton";
 
-                if (fullSizePhoto != null)
+                foreach (AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleListItem item in articleList.Items)
                 {
-                    var imageid = fullSizePhoto.Value.Id.ToString();
-                    var remoteimageurl = fullSizePhoto.Value.Url;
-                    var imagename = fullSizePhoto.Value.DestinationFileName;
-                    var imageguid = convertIdToGuid(imageid);
-                    imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
+                    int brafId = item.Id;
+                    AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article = articles.Get(brafId);
+                    var guid = convertIdToGuid(brafId.ToString());
+
+                    var title = article.Fields["title"].Trim();
+
+                    string embedCode = videoClient.VideoPlayers().GetWithFallback(article.Id, AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RedBean, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0), AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RcFlashPlayer, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0)).EmbedCode;
+
+                    string content = string.Format("<div class=\"videoContainer\">{0}</div> {1}", embedCode, article.Fields["content"]);
+
+                    PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
+
+                    var imageurl = "http://fc02.deviantart.net/fs20/f/2007/271/6/e/TF2_Sniper_Thanks_by_The_Loiterer.jpg";
+                    var album = "Brafton";
+
+                    if (fullSizePhoto != null)
+                    {
+                        var imageid = fullSizePhoto.Value.Id.ToString();
+                        var remoteimageurl = fullSizePhoto.Value.Url;
+                        var imagename = fullSizePhoto.Value.DestinationFileName;
+                        var imageguid = convertIdToGuid(imageid);
+                        imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
+                    }
+
+                    //article.Fields["lastModifiedDate"];
+
+                    var pubdate = article.Fields["date"];
+
+                    //category code
+
+                    //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoryList categoryList = categories.ListForArticle(article.Id, 0, 100);
+
+                    //StringBuilder itemCategories = new StringBuilder();
+
+                    //for (int i = 0; i < categoryList.TotalCount; i++)
+                    //{
+                    //    AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategory category = categories.Get(categoryList.Items[i].Id);
+                    //    itemCategories.Append(GetCleanCategoryName(category.Name));
+                    //    //p.Categories.Add(new Category(GetCleanCategoryName(category.Name), ""));
+                    //}
+
+
+                    //save post
+
+                    result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, "Brafton Category"));
                 }
-
-                //article.Fields["lastModifiedDate"];
-
-                var pubdate = article.Fields["date"];
-
-                //category code
-                
-                //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoryList categoryList = categories.ListForArticle(article.Id, 0, 100);
-
-                //StringBuilder itemCategories = new StringBuilder();
-
-                //for (int i = 0; i < categoryList.TotalCount; i++)
-                //{
-                //    AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategory category = categories.Get(categoryList.Items[i].Id);
-                //    itemCategories.Append(GetCleanCategoryName(category.Name));
-                //    //p.Categories.Add(new Category(GetCleanCategoryName(category.Name), ""));
-                //}
-
-
-                //save post
-
-                result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, "Brafton Category"));
             }
+
+            //regular content here
+            
+            if (braftonWritten)
+            {
+                ApiContext api = new ApiContext(contentKey, contentURL);
+                foreach (newsItem ni in api.News)
+                {
+                    Guid brafId = convertIdToGuid(ni.id.ToString());
+                    //foreach (category c in ni.categories)
+                    //   Categories.Add(new Category(GetCleanCategoryName(c.name), ""));
+                    
+                    string Content = ni.text;
+
+                    string DateCreated = ni.publishDate.ToString();
+                    var DateModified = ni.lastModifiedDate;
+                    string Description = ni.extract;
+
+                    string Slug = Slugify(ni.headline);
+
+                    string Title = ni.headline.Trim();
+
+                    PhotoInstance? fullSizePhoto = GetPhotoInstance(ni, enumeratedTypes.enumPhotoInstanceType.Large);
+
+                    var imageurl = "http://fc02.deviantart.net/fs20/f/2007/271/6/e/TF2_Sniper_Thanks_by_The_Loiterer.jpg";
+                    var album = "Brafton";
+
+                    if (fullSizePhoto != null)
+                    {
+                        var imageid = fullSizePhoto.Value.Id.ToString();
+                        var remoteimageurl = fullSizePhoto.Value.Url;
+                        var imagename = fullSizePhoto.Value.DestinationFileName;
+                        var imageguid = convertIdToGuid(imageid);
+                        imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
+                    }
+
+                    result.Add(new XmlDocument(brafId, Title, Content, DateCreated, imageurl, "Brafton Category"));
+
+                 }
+             }
+      
             return result;
         }
+
+        private PhotoInstance? GetPhotoInstance(newsItem ni, enumeratedTypes.enumPhotoInstanceType photoType)
+        {
+            return GetPhotoInstance(ni, new enumeratedTypes.enumPhotoInstanceType[] { photoType });
+        }
+
+        private PhotoInstance? GetPhotoInstance(newsItem ni, enumeratedTypes.enumPhotoInstanceType[] photoTypes)
+        {
+            IEnumerator<photo> phEn = ni.photos.GetEnumerator();
+            if (!phEn.MoveNext())
+                return null;
+
+            PhotoInstance phIns = new PhotoInstance();
+            bool found = false;
+            photo ph = phEn.Current;
+            IEnumerator<photo.Instance> phIEn = ph.Instances.GetEnumerator();
+            while (phIEn.MoveNext())
+            {
+                foreach (enumeratedTypes.enumPhotoInstanceType phType in photoTypes)
+                {
+                    if (phIEn.Current.type == phType)
+                    {
+                        phIns.Width = phIEn.Current.width;
+                        phIns.Height = phIEn.Current.height;
+                        phIns.Url = phIEn.Current.url;
+                        phIns.Type = phIEn.Current.type;
+                        phIns.Type = phType;
+
+                        string cleanedUrl = phIns.Url;
+                        if (cleanedUrl.IndexOf('?') >= 0)
+                            cleanedUrl = cleanedUrl.Substring(0, cleanedUrl.IndexOf('?'));
+
+                        string phTypeSlug = Slugify(phType.ToString());
+                        phIns.DestinationFileName = Slugify(ni.headline) + (phTypeSlug == "" ? "" : "-" + phTypeSlug) + Path.GetExtension(cleanedUrl);
+
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found)
+                {
+                    phIns.AltText = phEn.Current.htmlAlt;
+                    phIns.Caption = phEn.Current.caption;
+                    phIns.Id = phEn.Current.id;
+                    phIns.Orientation = phEn.Current.orientation;
+
+                    break;
+                }
+            }
+
+            if (!found)
+                return null;
+            return phIns;
+        }
+
 
         private string readCategories(string url) {
             StringBuilder itemCategories = new StringBuilder();
