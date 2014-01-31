@@ -23,7 +23,8 @@ namespace SitefinityWebApp.Publishing
             TaxonomyManager taxonomyManager = TaxonomyManager.GetManager();
             foreach (PropertyDescriptor propertyValue in properties)
             {
-                if (propertyValue.Name.Equals("Categories")){
+                if (propertyValue.Name.Equals("Categories"))
+                {
                     //var Category = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Taxonomy.Name == "Categories").FirstOrDefault();
                     //try
                     //{
@@ -32,34 +33,39 @@ namespace SitefinityWebApp.Publishing
                     //catch (Exception e){ 
                     //}
                     var tagName = propertyValue.GetValue(wrapperObj).ToString();
-                    var newtagname = tagName.Replace(" ", "").Replace("&", "");
-                    var tagList = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == newtagname);
-                    if (tagList.Any())
+                    Char[] A = new Char[] { ',' };
+                    string[] cats = tagName.Split(A);
+                    foreach (string cat in cats)
                     {
-                        (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
-                    }
-                    else
-                    {
-                        var catTaxonomy = taxonomyManager.GetTaxonomies<HierarchicalTaxonomy>().Where(t => t.Name == "Categories").SingleOrDefault();
-                        var parentTaxonomy = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == "News").Single();
-                        var newCat = taxonomyManager.CreateTaxon<HierarchicalTaxon>();
-                        newCat.Name = newtagname;
-                        newCat.Title = tagName;
-                        newCat.Description = "";
-                        newCat.UrlName = newtagname;
-                        newCat.Taxonomy = catTaxonomy;
-                        parentTaxonomy.Subtaxa.Add(newCat);
-                        //taxonomyManager.GetTaxonomies<HierarchicalTaxonomy>().Where(t => t.Name == "news").First().Taxa.Add(newCat);
-                        taxonomyManager.SaveChanges();
-                        tagList = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == newtagname);
-                        (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
-                    }
-                    try
-                    {
+                        var newtagname = cat.Replace(" ", "").Replace("&", "and");
+                        var tagList = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == newtagname);
+                        if (tagList.Any())
+                        {
+                            (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
+                        }
+                        else
+                        {
+                            var catTaxonomy = taxonomyManager.GetTaxonomies<HierarchicalTaxonomy>().Where(t => t.Name == "Categories").SingleOrDefault();
+                            var parentTaxonomy = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == "News").Single();
+                            var newCat = taxonomyManager.CreateTaxon<HierarchicalTaxon>();
+                            newCat.Name = newtagname;
+                            newCat.Title = cat;
+                            newCat.Description = "";
+                            newCat.UrlName = newtagname;
+                            newCat.Taxonomy = catTaxonomy;
+                            parentTaxonomy.Subtaxa.Add(newCat);
+                            //taxonomyManager.GetTaxonomies<HierarchicalTaxonomy>().Where(t => t.Name == "news").First().Taxa.Add(newCat);
+                            taxonomyManager.SaveChanges();
+                            tagList = taxonomyManager.GetTaxa<HierarchicalTaxon>().Where(t => t.Name == newtagname);
+                            (item as Telerik.Sitefinity.GenericContent.Model.Content).Organizer.AddTaxa("Category", tagList.FirstOrDefault().Id);
+                        }
+                        try
+                        {
 
-                    }
-                    catch (Exception e)
-                    {
+                        }
+                        catch (Exception e)
+                        {
+                        }
                     }
                 }
                 else

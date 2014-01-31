@@ -102,7 +102,7 @@ namespace SitefinityWebApp.Publishing
         private IDefinitionField[] definition = null;
 
 
-        protected virtual IList<XmlDocument> DeserializeXml(string braftonPublic, string braftonPrivate)
+        protected virtual IList<XmlDocument> DeserializeXml()
         {
 
             var result = new List<XmlDocument>();
@@ -151,7 +151,7 @@ namespace SitefinityWebApp.Publishing
                 AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleList articleList = articles.ListForFeed(feedList.Items[feedNumber].Id, "live", 0, 100);
 
                 int articleCount = articleList.Items.Count;
-                //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoriesClient categories = client.Categories();
+                AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoriesClient categories = client.Categories();
 
 
                 foreach (AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticleListItem item in articleList.Items)
@@ -186,21 +186,25 @@ namespace SitefinityWebApp.Publishing
 
                     //category code
 
-                    //AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoryList categoryList = categories.ListForArticle(article.Id, 0, 100);
+                    AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategoryList categoryList = categories.ListForArticle(article.Id, 0, 100);
 
-                    //StringBuilder itemCategories = new StringBuilder();
+                    StringBuilder itemCategories = new StringBuilder();
 
-                    //for (int i = 0; i < categoryList.TotalCount; i++)
-                    //{
-                    //    AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategory category = categories.Get(categoryList.Items[i].Id);
-                    //    itemCategories.Append(GetCleanCategoryName(category.Name));
-                    //    //p.Categories.Add(new Category(GetCleanCategoryName(category.Name), ""));
-                    //}
+                    for (int i = 0; i < categoryList.TotalCount; i++)
+                    {
+                        AdferoVideoDotNet.AdferoArticles.Categories.AdferoCategory category = categories.Get(categoryList.Items[i].Id);
+                        if (i > 0)
+                        {
+                            itemCategories.Append(",");
+                        }
+                        itemCategories.Append(GetCleanCategoryName(category.Name));
+                        
+                    }
 
 
                     //save post
 
-                    result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, "Brafton Category"));
+                    result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, itemCategories.ToString()));
                 }
             }
 
@@ -212,8 +216,20 @@ namespace SitefinityWebApp.Publishing
                 foreach (newsItem ni in api.News)
                 {
                     Guid brafId = convertIdToGuid(ni.id.ToString());
-                    //foreach (category c in ni.categories)
-                    //   Categories.Add(new Category(GetCleanCategoryName(c.name), ""));
+
+                    StringBuilder itemCategories = new StringBuilder();
+                    int count = 0;
+                    foreach (category c in ni.categories)
+                    {
+                        if (count > 0)
+                        {
+                            itemCategories.Append(",");
+                        }
+                        count++;
+                     
+                        itemCategories.Append(GetCleanCategoryName(c.name));
+                        
+                    }
                     
                     string Content = ni.text;
 
@@ -239,7 +255,7 @@ namespace SitefinityWebApp.Publishing
                         imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
                     }
 
-                    result.Add(new XmlDocument(brafId, Title, Content, DateCreated, imageurl, "Brafton Category"));
+                    result.Add(new XmlDocument(brafId, Title, Content, DateCreated, imageurl, itemCategories.ToString()));
 
                  }
              }
@@ -303,13 +319,20 @@ namespace SitefinityWebApp.Publishing
         }
 
 
-        private string readCategories(string url) {
+        private string readCategories(string url)
+        {
             StringBuilder itemCategories = new StringBuilder();
             var doc = XDocument.Load(url);
             var xRoot = doc.Root;
             var categories = xRoot.Elements("category");
+            int count = 0;
             foreach (var item in categories)
             {
+                if (count > 0)
+                {
+                    itemCategories.Append(",");
+                }
+                count++;
                 itemCategories.Append(item.Element("name").Value);
             }
 
@@ -444,7 +467,7 @@ namespace SitefinityWebApp.Publishing
             { url = feedinput; }
             var wrapperObjects = new List<WrapperObject>();
 
-            IEnumerable<XmlDocument> result = this.DeserializeXml(braftonPublic, braftonPrivate);
+            IEnumerable<XmlDocument> result = this.DeserializeXml();
             foreach (var item in result)
             {
                 var wrapperObject = this.ConvertToWraperObject(item);
