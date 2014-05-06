@@ -168,7 +168,7 @@ namespace SitefinityWebApp.Publishing
 
                     PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
 
-                    var imageurl = "http://fc02.deviantart.net/fs20/f/2007/271/6/e/TF2_Sniper_Thanks_by_The_Loiterer.jpg";
+                    var imageurl = "http://eofdreams.com/data_images/dreams/smile/smile-02.jpg";
                     var album = "Brafton";
 
                     if (fullSizePhoto != null)
