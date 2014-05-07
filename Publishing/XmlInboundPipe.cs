@@ -168,7 +168,7 @@ namespace SitefinityWebApp.Publishing
 
                     PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
 
-                    var imageurl = "http://eofdreams.com/data_images/dreams/smile/smile-02.jpg";
+                    var imageurl = "http://poexali.org/image/no-photo.gif";
                     var album = "Brafton";
 
                     if (fullSizePhoto != null)
@@ -243,7 +243,7 @@ namespace SitefinityWebApp.Publishing
 
                     PhotoInstance? fullSizePhoto = GetPhotoInstance(ni, enumeratedTypes.enumPhotoInstanceType.Large);
 
-                    var imageurl = "http://eofdreams.com/data_images/dreams/smile/smile-02.jpg";
+                    var imageurl = "http://poexali.org/image/no-photo.gif";
                     var album = "Brafton";
 
                     if (fullSizePhoto != null)
