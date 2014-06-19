@@ -37,6 +37,11 @@ public class ApiContext
         _baseurl = BaseUrl;
     }
 
+    public ApiContext(string ArchiveUrl)
+    {
+        _newsurl = ArchiveUrl;
+    }
+
     public string BaseUrl
     {
         get { return _baseurl; }
