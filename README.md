@@ -37,8 +37,9 @@ To set articles to import automatically, simply go to "Feeds and Notifications" 
 
 #### Uploading Archives ####
 
-To upload archives, upload the XML archive file to Sitefinity as a Document, retrieve the absolute path to this file, and modify the "Brafton Feed" Feed URL so that it is the absolute path to the archive file in the file system. Save the feed and click "Run" like you would with the regular Feed URL. Be sure to change the feed URL back to the api feed url when you're done uploading archives so new articles will automatically publish. 
- 
+To upload archives, upload the XML archive file to Sitefinity as a Document, retrieve the absolute path to this file, and navigate to the Settings--Advanced Settings-->Brafton Video page. Check the "Archive Content" checkbox. Uncheck the "Written Content" checkbox (for now). Provide the absolute path to the archive file. Save Changes. Go to Alternative Publishing and run the importer (wait a few minutes and articles should start appearing in the News section). Repeat as necessary. Once done uploading from archives, uncheck the "Archive Content" box and remove the archive url file from the "Archive File URL" field. Check the "Written Content" checkbox again. Save changes.
+
+
 
 
 
