@@ -126,5 +126,50 @@ namespace SitefinityWebApp.Publishing
                 this["FeedNumber"] = value;
             }
         }
+
+
+        [ObjectInfo(Title = "Archive Content", Description = "Import Brafton Written Content from Archive?")]
+        [ConfigurationProperty("BraftonArchive", DefaultValue = false)]
+        public bool BraftonArchive
+        {
+            get
+            {
+                return (bool)this["BraftonArchive"];
+            }
+            set
+            {
+                this["BraftonArchive"] = value;
+            }
+        }
+
+        [ObjectInfo(Title = "Archive File URL", Description = "Brafton Written Content Archive")]
+        [ConfigurationProperty("ArchiveURL", DefaultValue = "")]
+        public string ArchiveURL
+        {
+            get
+            {
+                return (string)this["ArchiveURL"];
+            }
+            set
+            {
+                this["ArchiveURL"] = value;
+            }
+        }
+
+        [ObjectInfo(Title = "Import As Blogs Instead of News", Description = "By default importer will import into News. Check this to import into Blogs.")]
+        [ConfigurationProperty("ImportBlogs", DefaultValue = false)]
+        public bool ImportBlogs
+        {
+            get
+            {
+                return (bool)this["ImportBlogs"];
+            }
+            set
+            {
+                this["ImportBlogs"] = value;
+            }
+        }
+
+
     }
 }
