@@ -28,8 +28,10 @@ using Telerik.Sitefinity.Workflow;
 using Telerik.Sitefinity.Data;
 using Telerik.Sitefinity.Scheduling;
 using Telerik.Sitefinity.Modules.News;
+using Telerik.Sitefinity.Modules.Blogs;
 using Telerik.Sitefinity.Modules.GenericContent;
 using Telerik.Sitefinity.News.Model;
+using Telerik.Sitefinity.Blogs.Model;
 
 
 namespace SitefinityWebApp.Publishing
@@ -111,8 +113,11 @@ namespace SitefinityWebApp.Publishing
 
             bool braftonVideo = config.BraftonVideo;
             bool braftonWritten = config.BraftonWritten;
+            bool braftonArchive = config.BraftonArchive;
+            bool blogorNews = config.ImportBlogs;
 
             string contentURL = config.ContentURL;
+            string archiveURL = config.ArchiveURL;
             string contentKey = config.ContentKey;
             string publicKey = config.BraftonVideoPublic;
             string secretKey = config.BraftonVideoPrivate;
@@ -162,13 +167,15 @@ namespace SitefinityWebApp.Publishing
 
                     var title = article.Fields["title"].Trim();
 
+                    var description = article.Fields["extract"].Trim();
+
                     string embedCode = videoClient.VideoPlayers().GetWithFallback(article.Id, AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RedBean, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0), AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RcFlashPlayer, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0)).EmbedCode;
 
                     string content = string.Format("<div class=\"videoContainer\">{0}</div> {1}", embedCode, article.Fields["content"]);
 
                     PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
 
-                    var imageurl = "http://eofdreams.com/data_images/dreams/smile/smile-02.jpg";
+                    var imageurl = "http://poexali.org/image/no-photo.gif";
                     var album = "Brafton";
 
                     if (fullSizePhoto != null)
@@ -204,7 +211,7 @@ namespace SitefinityWebApp.Publishing
 
                     //save post
 
-                    result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, itemCategories.ToString()));
+                    result.Add(new XmlDocument(guid, title, content, description, pubdate, imageurl, itemCategories.ToString()));
                 }
             }
 
@@ -243,7 +250,7 @@ namespace SitefinityWebApp.Publishing
 
                     PhotoInstance? fullSizePhoto = GetPhotoInstance(ni, enumeratedTypes.enumPhotoInstanceType.Large);
 
-                    var imageurl = "http://eofdreams.com/data_images/dreams/smile/smile-02.jpg";
+                    var imageurl = "http://poexali.org/image/no-photo.gif";
                     var album = "Brafton";
 
                     if (fullSizePhoto != null)
@@ -255,14 +262,67 @@ namespace SitefinityWebApp.Publishing
                         imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
                     }
 
-                    result.Add(new XmlDocument(brafId, Title, Content, DateCreated, imageurl, itemCategories.ToString()));
+                    result.Add(new XmlDocument(brafId, Title, Content, Description, DateCreated, imageurl, itemCategories.ToString()));
 
                  }
              }
-      
+
+            //archive content
+
+            if (braftonArchive)
+            {
+                ApiContext apiarchive = new ApiContext(archiveURL);
+                foreach (newsItem ni in apiarchive.News)
+                {
+                    Guid brafId = convertIdToGuid(ni.id.ToString());
+
+                    StringBuilder itemCategories = new StringBuilder();
+                    int count = 0;
+                    foreach (category c in ni.categories)
+                    {
+                        if (count > 0)
+                        {
+                            itemCategories.Append(",");
+                        }
+                        count++;
+
+                        itemCategories.Append(GetCleanCategoryName(c.name));
+
+                    }
+
+                    string Content = ni.text;
+
+                    string DateCreated = ni.publishDate.ToString();
+                    var DateModified = ni.lastModifiedDate;
+                    string Description = ni.extract;
+
+                    string Slug = Slugify(ni.headline);
+
+                    string Title = ni.headline.Trim();
+
+                    PhotoInstance? fullSizePhoto = GetPhotoInstance(ni, enumeratedTypes.enumPhotoInstanceType.Large);
+
+                    var imageurl = "http://poexali.org/image/no-photo.gif";
+                    var album = "Brafton";
+
+                    if (fullSizePhoto != null)
+                    {
+                        var imageid = fullSizePhoto.Value.Id.ToString();
+                        var remoteimageurl = fullSizePhoto.Value.Url;
+                        var imagename = fullSizePhoto.Value.DestinationFileName;
+                        var imageguid = convertIdToGuid(imageid);
+                        imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
+                    }
+
+                    result.Add(new XmlDocument(brafId, Title, Content, Description, DateCreated, imageurl, itemCategories.ToString()));
+                }
+            }
+
             return result;
         }
 
+
+      
         private PhotoInstance? GetPhotoInstance(newsItem ni, enumeratedTypes.enumPhotoInstanceType photoType)
         {
             return GetPhotoInstance(ni, new enumeratedTypes.enumPhotoInstanceType[] { photoType });
@@ -441,6 +501,7 @@ namespace SitefinityWebApp.Publishing
 
             obj.AddProperty(PublishingConstants.FieldTitle, item.Title);
             obj.AddProperty(PublishingConstants.FieldContent, item.Content);
+            obj.AddProperty(PublishingConstants.FieldSummary, item.Description);
             obj.AddProperty(PublishingConstants.FieldItemHash, GenerateItemHash(item));
             obj.AddProperty(PublishingConstants.FieldLink, item.Image);
             obj.AddProperty(PublishingConstants.FieldPublicationDate, item.Date);
@@ -459,9 +520,9 @@ namespace SitefinityWebApp.Publishing
             string ext = Path.GetExtension(feedinput).Replace(".", "");
             var url = feedinput + "/news";
 
-            string braftonPublic = "";
+            //string braftonPublic = "";
 
-            string braftonPrivate = "";
+            //string braftonPrivate = "";
 
             if (ext == "xml")
             { url = feedinput; }
@@ -485,6 +546,7 @@ namespace SitefinityWebApp.Publishing
 
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldTitle, ConcatenationTranslator.TranslatorName, true, PublishingConstants.FieldTitle));
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldContent, ConcatenationTranslator.TranslatorName, true, PublishingConstants.FieldDescription));
+            mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldSummary, ConcatenationTranslator.TranslatorName, true, PublishingConstants.FieldSummary));
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldItemHash, TransparentTranslator.TranslatorName, false, PublishingConstants.FieldItemHash));
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldPipeId, TransparentTranslator.TranslatorName, false, PublishingConstants.FieldPipeId));
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldLink, TransparentTranslator.TranslatorName, false, PublishingConstants.FieldLink));
@@ -500,6 +562,7 @@ namespace SitefinityWebApp.Publishing
                 {
                     new SimpleDefinitionField(PublishingConstants.FieldTitle, Res.Get<PublishingMessages>().ContentTitle),
                     new SimpleDefinitionField(PublishingConstants.FieldContent, Res.Get<PublishingMessages>().ContentContent),
+                    new SimpleDefinitionField(PublishingConstants.FieldSummary, Res.Get<PublishingMessages>().ContentSummary),
                     new SimpleDefinitionField(PublishingConstants.FieldItemHash, Res.Get<PublishingMessages>().ItemHash),
                     new SimpleDefinitionField(PublishingConstants.FieldPipeId, Res.Get<PublishingMessages>().PipeId),
                     new SimpleDefinitionField(PublishingConstants.FieldPublicationDate, Res.Get<PublishingMessages>().Date),
@@ -576,6 +639,14 @@ namespace SitefinityWebApp.Publishing
 
         public virtual void ToPublishingPoint()
         {
+            BraftonVideoConfig config = Config.Get<BraftonVideoConfig>();
+
+            bool braftonVideo = config.BraftonVideo;
+            bool braftonWritten = config.BraftonWritten;
+            bool braftonArchive = config.BraftonArchive;
+            bool importasBlogs = config.ImportBlogs;
+
+
             var items = new List<PublishingSystemEventInfo>();
             var wrapperObjects = this.LoadWrapperObjectItems();
             foreach (var item in wrapperObjects)
@@ -584,8 +655,31 @@ namespace SitefinityWebApp.Publishing
             }
 
             this.PushData(items);
-            publishNewsItems();
-        }
+
+            if (importasBlogs)
+            {
+                if (braftonArchive || braftonVideo)
+                {
+                    publishAllBlogItems();
+                }
+                if (braftonWritten)
+                {
+                    publishLatestBlogItems();
+                }
+            }
+            else
+            {
+                if (braftonArchive || braftonVideo)
+                {
+                    publishAllNewsItems();
+                }
+                if (braftonWritten)
+                {
+                    publishLatestNewsItems();
+                }
+            }
+
+       } 
     
         //If option to "Automatically publish imported items" is checked in Alternative publishing, 
         //the article publish date will be set to the moment importer runs instead of the publish date provided in the XML feed. 
@@ -594,99 +688,183 @@ namespace SitefinityWebApp.Publishing
         //those items by creating a new version with "Live" status (2). The "Master" version will remain, 
         //so there will always be two copies of a news item in the database, Master and Live. Only live is visible. -Ly
 
-        public virtual void publishNewsItems()
-           {
-                var allNews = GetAllNewsItems();
-                foreach (var item in allNews)
-                    {
-                        var id = item.Id;
-                        var date = item.PublicationDate;
-                        ModifyNewsPublicationDate(id, date);
-                    }
+        public virtual void publishAllNewsItems()
+        {
+            var allNews = GetAllNewsItems();
+            foreach (var item in allNews)
+                {
+                    var id = item.Id;
+                    var date = item.PublicationDate;
+                    ModifyNewsPublicationDate(id, date);
+                }
+        }
 
+        public virtual void publishLatestNewsItems()
+        {
+            var allNews = GetLatestNewsItems();
+            foreach (var item in allNews)
+            {
+                var id = item.Id;
+                var date = item.PublicationDate;
+                ModifyNewsPublicationDate(id, date);
             }
+        }
+
+        public virtual void publishAllBlogItems()
+        {
+            var allNews = GetAllBlogItems();
+            foreach (var item in allNews)
+            {
+                var id = item.Id;
+                var date = item.PublicationDate;
+                ModifyBlogPublicationDate(id, date);
+            }
+        }
+
+
+        public virtual void publishLatestBlogItems()
+        {
+            var allNews = GetLatestBlogItems();
+            foreach (var item in allNews)
+            {
+                var id = item.Id;
+                var date = item.PublicationDate;
+                ModifyBlogPublicationDate(id, date);
+            }
+        }
       
-            private List<NewsItem> GetAllNewsItems()
-            {
+        private List<BlogPost> GetLatestBlogItems()
+        {
+
+            DateTime pastweek = DateTime.Now.AddDays(-30);
+
+            BlogsManager blogsManager = BlogsManager.GetManager();
+
+            return blogsManager.GetBlogPosts().Where(b => b.Status == ContentLifecycleStatus.Master).Where( b => b.PublicationDate > pastweek ).ToList();
+        }
+
+        private List<NewsItem> GetLatestNewsItems()
+        {
+
+            DateTime pastweek = DateTime.Now.AddDays(-30);
+
             NewsManager newsManager = NewsManager.GetManager();
 
-                return newsManager.GetNewsItems().Where(newsItem => newsItem.Status == ContentLifecycleStatus.Master).ToList();
+            return newsManager.GetNewsItems().Where(b => b.Status == ContentLifecycleStatus.Master).Where(b => b.PublicationDate > pastweek).ToList();
+        }
+
+        private List<NewsItem> GetAllNewsItems()
+        {
+
+            NewsManager newsManager = NewsManager.GetManager();
+
+            return newsManager.GetNewsItems().Where(newsItem => newsItem.Status == ContentLifecycleStatus.Master).ToList();
+        }
+
+        private List<BlogPost> GetAllBlogItems()
+        {
+
+            BlogsManager blogsManager = BlogsManager.GetManager();
+
+            return blogsManager.GetBlogPosts().Where(b => b.Status == ContentLifecycleStatus.Master).ToList();
+        }
+
+        private void ModifyNewsPublicationDate(Guid masterNewsId, DateTime pubDate)
+        {
+
+        NewsManager newsManager = NewsManager.GetManager();
+        newsManager.Provider.SuppressSecurityChecks = true;  //Allows program to access publishing system without being logged in. 
+
+        //Check to make sure "Master" is not null. 
+
+        NewsItem master = newsManager.GetNewsItems().Where(newsItem => newsItem.Id == masterNewsId).FirstOrDefault();
+
+            if (master != null)
+            {
+
+                //Publish the item
+                newsManager.Lifecycle.PublishWithSpecificDate(master, pubDate);
+                master.ApprovalWorkflowState = "Published";
+                newsManager.SaveChanges();
+
             }
 
-            private void ModifyNewsPublicationDate(Guid masterNewsId, DateTime pubDate)
-            {
+         }
 
-            NewsManager newsManager = NewsManager.GetManager();
-            newsManager.Provider.SuppressSecurityChecks = true;  //Allows program to access publishing system without being logged in. 
+        private void ModifyBlogPublicationDate(Guid masterNewsId, DateTime pubDate)
+        {
+
+            BlogsManager blogsManager = BlogsManager.GetManager();
+            blogsManager.Provider.SuppressSecurityChecks = true;  //Allows program to access publishing system without being logged in. 
 
             //Check to make sure "Master" is not null. 
 
-            NewsItem master = newsManager.GetNewsItems().Where(newsItem => newsItem.Id == masterNewsId).FirstOrDefault();
+            BlogPost master = blogsManager.GetBlogPosts().Where(b => b.Id == masterNewsId).FirstOrDefault();
 
-             if (master != null)
-              {
+            if (master != null)
+            {
 
-                 //Publish the item
-                  newsManager.Lifecycle.PublishWithSpecificDate(master, pubDate);
-                  master.ApprovalWorkflowState = "Published";
-                  newsManager.SaveChanges();
+                //Publish the item
+                blogsManager.Lifecycle.PublishWithSpecificDate(master, pubDate);
+                master.ApprovalWorkflowState = "Published";
+                blogsManager.SaveChanges();
 
-               }
+            }
 
-         }
+        }
 
         //video code starts here
         //added by ben
 
-            private bool ValidateVideoPublicKey(string publicKey)
-            {
-                Regex reg = new Regex("[a-f0-9]{8}", RegexOptions.IgnoreCase);
-                return reg.IsMatch(publicKey);
-            }
+        private bool ValidateVideoPublicKey(string publicKey)
+        {
+            Regex reg = new Regex("[a-f0-9]{8}", RegexOptions.IgnoreCase);
+            return reg.IsMatch(publicKey);
+        }
 
-            private bool ValidateGuid(string guid)
-            {
-                Regex reg = new Regex("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", RegexOptions.IgnoreCase);
-                return reg.IsMatch(guid);
-            }
+        private bool ValidateGuid(string guid)
+        {
+            Regex reg = new Regex("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", RegexOptions.IgnoreCase);
+            return reg.IsMatch(guid);
+        }
 
-            private PhotoInstance? GetPhotoInstance(AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article, AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos, AdferoVideoDotNet.AdferoPhotos.AdferoPhotoClient photoClient, string scaleAxis, int scale)
-            {
-                PhotoInstance? inst = null;
+        private PhotoInstance? GetPhotoInstance(AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article, AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos, AdferoVideoDotNet.AdferoPhotos.AdferoPhotoClient photoClient, string scaleAxis, int scale)
+        {
+            PhotoInstance? inst = null;
 
-                AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotoList photoList = photos.ListForArticle(article.Id, 0, 100);
-                if (photoList.TotalCount > 0)
+            AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotoList photoList = photos.ListForArticle(article.Id, 0, 100);
+            if (photoList.TotalCount > 0)
+            {
+                AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhoto apho = photos.Get(photoList.Items[0].Id);
+                int photoId = apho.SourcePhotoId;
+                AdferoVideoDotNet.AdferoPhotos.Photos.AdferoPhoto pho = photoClient.Photos().GetScaleLocationUrl(photoId, scaleAxis, scale);
+                string photoUrl = pho.LocationUri;
+                string photoCaption = photos.Get(photoList.Items[0].Id).Fields["caption"];
+
+                enumeratedTypes.enumPhotoOrientation ori = enumeratedTypes.enumPhotoOrientation.Landscape;
+                if (scaleAxis == AdferoVideoDotNet.AdferoPhotos.Photos.AdferoScaleAxis.Y)
+                    ori = enumeratedTypes.enumPhotoOrientation.Portrait;
+
+                string cleanedUrl = photoUrl;
+                if (cleanedUrl.IndexOf('?') >= 0)
+                    cleanedUrl = cleanedUrl.Substring(0, cleanedUrl.IndexOf('?'));
+
+                inst = new PhotoInstance()
                 {
-                    AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhoto apho = photos.Get(photoList.Items[0].Id);
-                    int photoId = apho.SourcePhotoId;
-                    AdferoVideoDotNet.AdferoPhotos.Photos.AdferoPhoto pho = photoClient.Photos().GetScaleLocationUrl(photoId, scaleAxis, scale);
-                    string photoUrl = pho.LocationUri;
-                    string photoCaption = photos.Get(photoList.Items[0].Id).Fields["caption"];
-
-                    enumeratedTypes.enumPhotoOrientation ori = enumeratedTypes.enumPhotoOrientation.Landscape;
-                    if (scaleAxis == AdferoVideoDotNet.AdferoPhotos.Photos.AdferoScaleAxis.Y)
-                        ori = enumeratedTypes.enumPhotoOrientation.Portrait;
-
-                    string cleanedUrl = photoUrl;
-                    if (cleanedUrl.IndexOf('?') >= 0)
-                        cleanedUrl = cleanedUrl.Substring(0, cleanedUrl.IndexOf('?'));
-
-                    inst = new PhotoInstance()
-                    {
-                        AltText = photoCaption,
-                        Caption = photoCaption,
-                        DestinationFileName = Slugify(article.Fields["title"]) + "-" + scale + Path.GetExtension(cleanedUrl),
-                        Height = 0,
-                        Id = apho.Id,
-                        Orientation = ori,
-                        Type = enumeratedTypes.enumPhotoInstanceType.Custom,
-                        Url = photoUrl,
-                        Width = 0
-                    };
-                }
-
-                return inst;
+                    AltText = photoCaption,
+                    Caption = photoCaption,
+                    DestinationFileName = Slugify(article.Fields["title"]) + "-" + scale + Path.GetExtension(cleanedUrl),
+                    Height = 0,
+                    Id = apho.Id,
+                    Orientation = ori,
+                    Type = enumeratedTypes.enumPhotoInstanceType.Custom,
+                    Url = photoUrl,
+                    Width = 0
+                };
             }
+
+            return inst;
+        }
 
         private string Slugify(string input)
         {
