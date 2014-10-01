@@ -140,8 +140,8 @@ namespace SitefinityWebApp.Publishing
 
             if (braftonVideo)
             {
-                string baseUrl = "http://api.video.brafton.com/v2/";
-                string basePhotoUrl = "http://pictures.video.brafton.com/v2/";
+                string baseUrl = "http://livevideo.api.brafton.com/v2/";
+                string basePhotoUrl = "http://pictures.brafton.com/v2/";
                 AdferoVideoClient videoClient = new AdferoVideoClient(baseUrl, publicKey, secretKey);
                 AdferoClient client = new AdferoClient(baseUrl, publicKey, secretKey);
                 AdferoPhotoClient photoClient = new AdferoPhotoClient(basePhotoUrl);
