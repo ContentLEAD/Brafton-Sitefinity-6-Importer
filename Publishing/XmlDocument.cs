@@ -12,9 +12,10 @@ namespace SitefinityWebApp.Publishing
             this.Content = String.Empty;
             this.Date = String.Empty;
             this.Image = String.Empty;
+            this.Description = String.Empty;
         }
 
-        public XmlDocument(Guid id, string title, string content, string pubdate, string imageurl, string categories)
+        public XmlDocument(Guid id, string title, string content, string pubdate, string imageurl, string categories, string description)
             : this()
         {
             this.Id = id;
@@ -23,6 +24,7 @@ namespace SitefinityWebApp.Publishing
             this.Image = imageurl;
             this.Date = pubdate;
             this.Categories = categories;
+            this.Description = description;
         }
 
         public Guid Id
@@ -56,6 +58,11 @@ namespace SitefinityWebApp.Publishing
         }
 
         public string Date
+        {
+            get;
+            set;
+        }
+        public string Description
         {
             get;
             set;

@@ -167,7 +167,7 @@ namespace SitefinityWebApp.Publishing
                     string content = string.Format("<div class=\"videoContainer\">{0}</div> {1}", embedCode, article.Fields["content"]);
 
                     PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
-
+                    string description = string.Empty;
                     var imageurl = "http://poexali.org/image/no-photo.gif";
                     var album = "Brafton";
 
@@ -204,7 +204,7 @@ namespace SitefinityWebApp.Publishing
 
                     //save post
 
-                    result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, itemCategories.ToString()));
+                    result.Add(new XmlDocument(guid, title, content, pubdate, imageurl, itemCategories.ToString(), description));
                 }
             }
 
@@ -240,7 +240,7 @@ namespace SitefinityWebApp.Publishing
                     string Slug = Slugify(ni.headline);
 
                     string Title = ni.headline.Trim();
-
+                    
                     PhotoInstance? fullSizePhoto = GetPhotoInstance(ni, enumeratedTypes.enumPhotoInstanceType.Large);
 
                     var imageurl = "http://poexali.org/image/no-photo.gif";
@@ -255,7 +255,7 @@ namespace SitefinityWebApp.Publishing
                         imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
                     }
 
-                    result.Add(new XmlDocument(brafId, Title, Content, DateCreated, imageurl, itemCategories.ToString()));
+                    result.Add(new XmlDocument(brafId, Title, Content, DateCreated, imageurl, itemCategories.ToString(),Description));
 
                  }
              }
@@ -445,7 +445,8 @@ namespace SitefinityWebApp.Publishing
             obj.AddProperty(PublishingConstants.FieldLink, item.Image);
             obj.AddProperty(PublishingConstants.FieldPublicationDate, item.Date);
             obj.AddProperty(PublishingConstants.FieldIdentifier, item.Id);
-            obj.AddProperty(PublishingConstants.FieldCategories, item.Categories); //list of categories (Category.Name) separated by comma
+            obj.AddProperty(PublishingConstants.FieldCategories, item.Categories);
+            obj.AddProperty(PublishingConstants.FieldSummary, item.Description);//list of categories (Category.Name) separated by comma
             //obj.AddProperty(PublishingConstants.FieldCategories, "News");
             return obj;
         }
@@ -490,6 +491,7 @@ namespace SitefinityWebApp.Publishing
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldLink, TransparentTranslator.TranslatorName, false, PublishingConstants.FieldLink));
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldPublicationDate, TransparentTranslator.TranslatorName, false, PublishingConstants.FieldPublicationDate));
             mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldCategories, TransparentTranslator.TranslatorName, false, PublishingConstants.FieldCategories));
+            mappingsList.Add(PublishingSystemFactory.CreateMapping(PublishingConstants.FieldSummary, TransparentTranslator.TranslatorName, false, PublishingConstants.FieldSummary));
 
             return mappingsList;
         }
@@ -506,6 +508,7 @@ namespace SitefinityWebApp.Publishing
                     new SimpleDefinitionField(PublishingConstants.FieldLink, Res.Get<PublishingMessages>().ContentLink),
                     new SimpleDefinitionField(PublishingConstants.FieldOriginalContentId, Res.Get<PublishingMessages>().OriginalItemId),
                     new SimpleDefinitionField(PublishingConstants.FieldCategories, Res.Get<PublishingMessages>().Categories),
+                    new SimpleDefinitionField(PublishingConstants.FieldSummary, Res.Get<PublishingMessages>().ContentSummary),
                 };
         }
 
