@@ -89,10 +89,7 @@ namespace AdferoVideoDotNet.AdferoPhotos.Photos
             Dictionary<string, string> data = new Dictionary<string, string>();
             data["action"] = "scale";
 
-            if (scaleAxis == AdferoScaleAxis.X)
-                data["scale"] = string.Format("{0}x*", scale);
-            else if (scaleAxis == AdferoScaleAxis.Y)
-                data["scale"] = string.Format("*x{0}", scale);
+            data["scale"] = string.Format("*x{0}", scale);
 
             List<string> parts = new List<string>();
             foreach (KeyValuePair<string, string> kv in data)
