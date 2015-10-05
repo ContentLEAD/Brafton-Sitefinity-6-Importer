@@ -142,7 +142,7 @@ namespace SitefinityWebApp.Publishing
                 AdferoPhotoClient photoClient = new AdferoPhotoClient(basePhotoUrl);
 
                 AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos = client.ArticlePhotos();
-                string scaleAxis = AdferoVideoDotNet.AdferoPhotos.Photos.AdferoScaleAxis.X;
+                string scaleAxis = "x";
 
                 AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedsClient feeds = client.Feeds();
                 AdferoVideoDotNet.AdferoArticles.Feeds.AdferoFeedList feedList = feeds.ListFeeds(0, 10);
@@ -158,28 +158,31 @@ namespace SitefinityWebApp.Publishing
                 {
                     int brafId = item.Id;
                     AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article = articles.Get(brafId);
-                    var guid = convertIdToGuid(brafId.ToString());
+                    Guid guid = convertIdToGuid(brafId.ToString());
 
                     var title = article.Fields["title"].Trim();
-
                     string embedCode = videoClient.VideoPlayers().GetWithFallback(article.Id, AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RedBean, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0), AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoPlayers.RcFlashPlayer, new AdferoVideoDotNet.AdferoArticlesVideoExtensions.VideoPlayers.AdferoVersion(1, 0, 0)).EmbedCode;
-
+                    
                     string content = string.Format("<div class=\"videoContainer\">{0}</div> {1}", embedCode, article.Fields["content"]);
 
-                    PhotoInstance? fullSizePhoto = GetPhotoInstance(article, photos, photoClient, scaleAxis, 500);
+                    PhotoInstance? fullSizePhoto = GetVideoPhotoInstance(article, photos, photoClient, 500, scaleAxis);
+                    
                     string description = string.Empty;
                     var imageurl = "http://poexali.org/image/no-photo.gif";
                     var album = "Brafton";
-
+                    
                     if (fullSizePhoto != null)
                     {
                         var imageid = fullSizePhoto.Value.Id.ToString();
                         var remoteimageurl = fullSizePhoto.Value.Url;
                         var imagename = fullSizePhoto.Value.DestinationFileName;
-                        var imageguid = convertIdToGuid(imageid);
+                        Guid imageguid = convertIdToGuid(imageid);
                         imageurl = DownloadRemoteImageFile(imageguid, album, imagename, remoteimageurl, ".jpg");
+                        
+                        
                     }
-
+                    
+                   
                     //article.Fields["lastModifiedDate"];
 
                     var pubdate = article.Fields["date"];
@@ -653,7 +656,7 @@ namespace SitefinityWebApp.Publishing
                 return reg.IsMatch(guid);
             }
 
-            private PhotoInstance? GetPhotoInstance(AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article, AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos, AdferoVideoDotNet.AdferoPhotos.AdferoPhotoClient photoClient, string scaleAxis, int scale)
+            private PhotoInstance? GetVideoPhotoInstance(AdferoVideoDotNet.AdferoArticles.Articles.AdferoArticle article, AdferoVideoDotNet.AdferoArticles.ArticlePhotos.AdferoArticlePhotosClient photos, AdferoVideoDotNet.AdferoPhotos.AdferoPhotoClient photoClient, int scale, string scaleAxis)
             {
                 PhotoInstance? inst = null;
 
